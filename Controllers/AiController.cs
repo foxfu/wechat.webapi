@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Logging;
@@ -25,26 +26,22 @@ namespace WxWebApi.Controllers
 
         // GET api/values
         [HttpGet]
-        //[Produces("application/json")]//Restrict to json response no matter the accept header in request
         public IActionResult Get(Conversation con)
         {
             if (CheckSignature(con))
             {
                 return Ok(con.Echostr);
             }
-            return NotFound("Not found");
-        }
-
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
+            var msg = new WxMessage() {
+                Content = "hello world",
+                FromUserName = "Max"
+            };
+            return Ok(msg);
         }
 
         // POST api/values
         [HttpPost]
-        [Produces("text/xml")]
+        [Produces("text/plain")]
         public IActionResult Post([FromBody]WxMessage message)
         {
             try
@@ -63,13 +60,13 @@ namespace WxWebApi.Controllers
                     FromUserName = message.ToUserName,
                     ToUserName = message.FromUserName,
                     CreateTime = message.CreateTime,
-                    Content = "你好呀",
+                    Content = "欢迎来到HomeTesterClub!",
                     MsgType = message.MsgType
                 };
                 
                 _logger.LogWarning($"Reply message data - Type:{reply.MsgType}|From:{reply.ToUserName}|Content:{reply.Content}");
 
-                return Ok(reply);
+                return Content(reply.ToString());
             }
             catch (Exception ex)
             {
@@ -77,20 +74,7 @@ namespace WxWebApi.Controllers
                 return NotFound();
             }
         }
-
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
         
-
         private bool CheckSignature(Conversation con)
         {
             //echostring = 6146405371800967166
